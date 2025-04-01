@@ -1,0 +1,28 @@
+.program myproject
+
+PUBLIC entry:
+.wrap_target
+    pull block      ; load a 32-bit word from the TX FIFO into the OSR
+    out pins, 1     ; shift a single bit out of the OSR to the GPIO Pin
+.wrap
+
+
+% c-sdk {
+static inline void myproject_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
+    // create and initialise a state machine configuration
+    pio_sm_config config = myproject_program_get_default_config (offset);
+
+    // update the configuration with the 'out' pins
+    sm_config_set_out_pins (&config, gpio, 1);
+
+    // update the configuration with the clock divider
+    float div = clock_get_hz (clk_sys) * 1e-6;
+    sm_config_set_clkdiv (&config, div);
+
+    // apply the configuration to the state machine and initialise the program counter
+    pio_sm_init (pio, sm, offset + myproject_offset_entry, &config);
+
+    // enable the state machine
+    pio_sm_set_enabled (pio, sm, true);
+}
+%}
