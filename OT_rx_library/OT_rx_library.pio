@@ -1,4 +1,4 @@
-.program myproject
+.program OT_rx
 
 PUBLIC entry:
 .wrap_target
@@ -8,9 +8,9 @@ PUBLIC entry:
 
 
 % c-sdk {
-static inline void myproject_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
+static inline void OT_rx_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
     // create and initialise a state machine configuration
-    pio_sm_config config = myproject_program_get_default_config (offset);
+    pio_sm_config config = OT_rx_program_get_default_config (offset);
 
     // update the configuration with the 'out' pins
     sm_config_set_out_pins (&config, gpio, 1);
@@ -20,7 +20,7 @@ static inline void myproject_sm_init (PIO pio, uint sm, uint offset, uint gpio) 
     sm_config_set_clkdiv (&config, div);
 
     // apply the configuration to the state machine and initialise the program counter
-    pio_sm_init (pio, sm, offset + myproject_offset_entry, &config);
+    pio_sm_init (pio, sm, offset + OT_rx_offset_entry, &config);
 
     // enable the state machine
     pio_sm_set_enabled (pio, sm, true);

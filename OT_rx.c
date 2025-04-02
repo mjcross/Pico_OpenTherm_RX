@@ -10,7 +10,7 @@ int main() {
     stdio_init_all();
 
     uint sm;
-    if (myproject_init (pio, &sm, gpio)) {
+    if (OT_rx_init (pio, &sm, gpio)) {
         puts ("running");
         while(true) {
             pio_sm_put (pio, sm, 1);    // send '1' to SM FIFO (LED on)

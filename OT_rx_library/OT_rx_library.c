@@ -2,13 +2,13 @@
 #include "hardware/gpio.h"
 #include "OT_rx_library.h"
 
-bool myproject_init (PIO pio, uint *p_sm, uint gpio) {
+bool OT_rx_init (PIO pio, uint *p_sm, uint gpio) {
     // add the program to the PIO shared instruction memory
-    if (pio_can_add_program (pio, &myproject_program) == false) {
+    if (pio_can_add_program (pio, &OT_rx_program) == false) {
         puts ("could not add the pio program");
         return false;
     }
-    uint offset = pio_add_program (pio, &myproject_program);
+    uint offset = pio_add_program (pio, &OT_rx_program);
 
     // claim a free state machine
     int sm = pio_claim_unused_sm (pio, false);
@@ -24,7 +24,7 @@ bool myproject_init (PIO pio, uint *p_sm, uint gpio) {
     pio_sm_set_consecutive_pindirs (pio, *p_sm, gpio, 1, true);
 
     // configure and enable the state machine
-    myproject_sm_init (pio, *p_sm, offset, gpio);
+    OT_rx_sm_init (pio, *p_sm, offset, gpio);
 
     return true;
 }

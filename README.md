@@ -22,6 +22,10 @@ In normal operation the PIO code pushes a 32-bit word to the RX-FIFO for every f
 - create project on GitHub from my newly fixed [pico-pio-template](https://github.com/mjcross/pico-pio-template)
 - update readme.md *(this file)*
 
+02/04/2025
+- set project name and update filenames and CMakeLists
+
+
 
 
 ## Build environment
