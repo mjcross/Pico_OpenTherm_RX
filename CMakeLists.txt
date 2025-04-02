@@ -28,7 +28,7 @@ include(pico_sdk_import.cmake)
 
 #-------------------------------------------------
 # Define the name of the project (subsequently reference it as ${PROJECT_NAME})
-project(myproject C CXX ASM)
+project(OT_rx C CXX ASM)
 #-------------------------------------------------
 
 # Initialise the Raspberry Pi Pico SDK
@@ -58,12 +58,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 #----------------------------------
 # generate our user-defined library
 #----------------------------------
-add_subdirectory(myproject_library)
+add_subdirectory(OT_rx_library)
 
 # Add additional libraries to the project
-target_link_libraries(myproject 
+target_link_libraries(${PROJECT_NAME} 
         hardware_pio
-		myproject_library
+		OT_rx_library
         )
 
-pico_add_extra_outputs(myproject)
+pico_add_extra_outputs(${PROJECT_NAME})

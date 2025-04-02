@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "hardware/gpio.h"
-#include "myproject_library.h"
+#include "OT_rx_library.h"
 
 bool myproject_init (PIO pio, uint *p_sm, uint gpio) {
     // add the program to the PIO shared instruction memory
