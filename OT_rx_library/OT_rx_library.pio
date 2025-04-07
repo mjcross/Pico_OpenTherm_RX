@@ -2,8 +2,37 @@
 
 PUBLIC entry:
 .wrap_target
-    pull block      ; load a 32-bit word from the TX FIFO into the OSR
-    out pins, 1     ; shift a single bit out of the OSR to the GPIO Pin
+receive_frame:
+    set y, 31           // 32 data bits per frame
+
+start_bit:
+    wait 1 pin 0        // start bit is always '1'
+    wait 0 pin 0        // sync to mid-bit transition
+
+receive_bit:
+    set x, 31 [5]       // wait 6 + 32*(32+1) = 850us at 0.8us per tick
+delay_loop:
+    nop [31]
+    jmp x-- delay_loop
+                        // note that on exit x = 0b1111....1
+
+    jmp pin bit_is_1    // branch if gpio[EXECCTRL_JMP_PIN] is high
+
+bit_is_0:
+    in null, 1          // shift single bit from NULL: 0 -> ISR (autopush on 32nd bit)
+    wait 1 pin 0        // sync to rising edge on in_pin[0]
+
+
+bit_is_1:
+    in x, 1             // shift single bit from 'X': 1 -> ISR
+    wait 0 pin 0        // sync to falling edge
+
+    jmp y-- receive_bit // next bit
+
+stop_bit:
+    wait 1 pin 0        // stop bit is always '1'
+    wait 0 pin 0
+
 .wrap
 
 
@@ -12,12 +41,20 @@ static inline void OT_rx_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
     // create and initialise a state machine configuration
     pio_sm_config config = OT_rx_program_get_default_config (offset);
 
-    // update the configuration with the 'out' pins
-    sm_config_set_out_pins (&config, gpio, 1);
+    // configure the 'jmp' and 'in' pins
+    sm_config_set_jmp_pin (&config, gpio);
+    sm_config_set_in_pins (&config, gpio);
 
-    // update the configuration with the clock divider
-    float div = clock_get_hz (clk_sys) * 1e-6;
+    // configure the clock divider
+    float div = clock_get_hz (clk_sys) / 1.25e6;    // set 1.25MHz clock = 0.8us per tick
     sm_config_set_clkdiv (&config, div);
+
+    // configure the input shift register for shift left with autopush on full
+    sm_config_set_in_shift (&config, 
+        false,  // bool shift_right
+        true,   // bool autopush
+        32      // uint push_threshold
+    );
 
     // apply the configuration to the state machine and initialise the program counter
     pio_sm_init (pio, sm, offset + OT_rx_offset_entry, &config);
