@@ -59,13 +59,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # generate our user-defined libraries
 #------------------------------------
 add_subdirectory(OT_rx_library)
-#add_subdirectory(OT_tx_library)
+add_subdirectory(OT_tx_library)
 
 # Add additional libraries to the project
 target_link_libraries(${PROJECT_NAME} 
         hardware_pio
 		OT_rx_library
-        #OT_tx_library
+        OT_tx_library
         )
 
 pico_add_extra_outputs(${PROJECT_NAME})

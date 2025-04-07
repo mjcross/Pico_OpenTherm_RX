@@ -28,7 +28,7 @@ stop_bit:
 % c-sdk {
 static inline void OT_tx_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
     // create and initialise a state machine configuration
-    pio_sm_config config = OT_rx_program_get_default_config (offset);
+    pio_sm_config config = OT_tx_program_get_default_config (offset);
 
     // configure 'set' and 'out' pins (also used by MOV)
     sm_config_set_out_pins (&config, gpio, 1);
