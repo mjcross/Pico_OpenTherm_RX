@@ -1,0 +1,54 @@
+.program OT_tx
+
+PUBLIC entry:
+.wrap_target
+    set y, 31           // 32 data bits per frame
+    pull block          // wait for CPU to send frame data
+
+start_bit:
+    set pins, 1 [2]     // 1st half (3 ticks)
+    set pins, 0 [1]     // 2nd half (lasts 3 ticks)
+
+transmit_bit:
+    out x, 1            // get next bit from OSR
+
+    mov pins, x [2]     // output 1st half (3 ticks)
+    mov pins, !x        // 2nd half (lasts 3 ticks)
+
+    jmp y-- transmit_bit
+    nop                 // final tick of last data bit
+
+stop_bit:
+    set pins, 1 [2]     // 1st half (3 ticks)
+    set pins, 0 [1]     // 2nd half (lasts 3 ticks)
+
+.wrap
+
+
+% c-sdk {
+static inline void OT_tx_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
+    // create and initialise a state machine configuration
+    pio_sm_config config = OT_rx_program_get_default_config (offset);
+
+    // configure 'set' and 'out' pins (also used by MOV)
+    sm_config_set_out_pins (&config, gpio, 1);
+    sm_config_set_set_pins (&config, gpio, 1);
+
+    // configure the clock divider
+    float div = clock_get_hz (clk_sys) / 6e3;    // set 6khz clock = 6 ticks/bit at 1kb/s
+    sm_config_set_clkdiv (&config, div);
+
+    // configure the output shift register for shift right with no autopull
+    sm_config_set_out_shift (&config, 
+        true,  // bool shift_right
+        false, // bool autopush
+        0      // uint push_threshold
+    );
+
+    // apply the configuration to the state machine and initialise the program counter
+    pio_sm_init (pio, sm, offset + OT_tx_offset_entry, &config);
+
+    // enable the state machine
+    pio_sm_set_enabled (pio, sm, true);
+}
+%}

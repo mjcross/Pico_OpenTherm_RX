@@ -10,13 +10,13 @@ int main() {
     stdio_init_all();
 
     uint rx_sm;
-    uint32_t frame;
+    uint32_t rx_frame;
     if (OT_rx_init (pio, &rx_sm, gpio)) {
         puts ("running");
         while(true) {
             if (pio_sm_is_tx_fifo_empty (pio, rx_sm) == false) {
-                frame = pio_sm_get_blocking (pio, rx_sm);
-                printf("RX: 0x%08lu\n", frame);
+                rx_frame = pio_sm_get_blocking (pio, rx_sm);
+                printf("RX: 0x%08lu\n", rx_frame);
             }
  
             sleep_ms (1000);

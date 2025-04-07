@@ -4,7 +4,7 @@ Robustly decode an OpenTherm frame on an RPi Pico (RP2040) using a PIO state mac
 
 The [OpenTherm 2.2 specification](OT-Protocol-Specification-v2-2.pdf) defines a point-to-point communications protocol between a central heating controller ('master') and boiler ('slave').
 
-The repository is structured as a VS Code project. It is configured to
+The repository is structured as a VS Code project with CMake. It is configured to
 manage the target device via a [Picoprobe](https://github.com/raspberrypi/picoprobe) USB/SWD bridge.
 
 ## Notes
@@ -25,8 +25,6 @@ In normal operation the PIO code pushes a 32-bit word to the RX-FIFO for every f
 02/04/2025
 - set project name and update filenames and CMakeLists
 
-
-
-
-## Build environment
-
+07/05/2025
+- add PIO code to receive and decode a frame (compiles OK)
+- add `OT_tx_library` with PIO code to transmit a frame for loopback testing (compiles OK) 
