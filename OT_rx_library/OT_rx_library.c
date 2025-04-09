@@ -19,7 +19,7 @@ bool OT_rx_init (PIO pio, uint *p_sm, uint gpio) {
         *p_sm = (uint)sm;
     }
 
-    // no need to configure GPIO: GPIO pins are always readable
+    // no need to configure IN pins, GPIOs are always readable
  
     // configure and enable the state machine
     OT_rx_sm_init (pio, *p_sm, offset, gpio);

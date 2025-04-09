@@ -1,20 +1,26 @@
 .program OT_rx
 
+bit_is_1:
+    in x, 1             // shift single bit from 'X': 1 -> ISR
+    wait 0 pin 0        // sync to falling edge
+
+.wrap_target            // arrive here after a zero bit
+    jmp y-- delay_850us
+
+    wait 1 pin 0        // wait for STOP bit, always '1'
+    wait 0 pin 0
+
 PUBLIC entry:
-.wrap_target
-receive_frame:
     set y, 31           // 32 data bits per frame
 
-start_bit:
-    wait 1 pin 0        // start bit is always '1'
+    wait 1 pin 0        // wait for START bit, always '1'
     wait 0 pin 0        // sync to mid-bit transition
 
-receive_bit:
-    set x, 31 [5]       // wait 6 + 32*(32+1) = 850us at 0.8us per tick
+delay_850us:            // wait until just before next mid-bit transition
+    set x, 31 [5]       // 6 + 32*(32+1) = 1,062 ticks at 0.8us
 delay_loop:
     nop [31]
-    jmp x-- delay_loop
-                        // note that on exit x = 0b1111....1
+    jmp x-- delay_loop  // note that on exit X is all ones
 
     jmp pin bit_is_1    // branch if gpio[EXECCTRL_JMP_PIN] is high
 
@@ -22,18 +28,7 @@ bit_is_0:
     in null, 1          // shift single bit from NULL: 0 -> ISR (autopush on 32nd bit)
     wait 1 pin 0        // sync to rising edge on in_pin[0]
 
-
-bit_is_1:
-    in x, 1             // shift single bit from 'X': 1 -> ISR
-    wait 0 pin 0        // sync to falling edge
-
-    jmp y-- receive_bit // next bit
-
-stop_bit:
-    wait 1 pin 0        // stop bit is always '1'
-    wait 0 pin 0
-
-.wrap
+.wrap                   // skip over bit_is_1
 
 
 % c-sdk {
@@ -49,9 +44,9 @@ static inline void OT_rx_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
     float div = clock_get_hz (clk_sys) / 1.25e6;    // set 1.25MHz clock = 0.8us per tick
     sm_config_set_clkdiv (&config, div);
 
-    // configure the input shift register for shift left with autopush on full
+    // configure ISR for shift right as LSB is sent first, and autopush on full
     sm_config_set_in_shift (&config, 
-        false,  // bool shift_right
+        true,  // bool shift_right
         true,   // bool autopush
         32      // uint push_threshold
     );

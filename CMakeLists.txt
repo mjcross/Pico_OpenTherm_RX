@@ -64,6 +64,7 @@ add_subdirectory(OT_tx_library)
 # Add additional libraries to the project
 target_link_libraries(${PROJECT_NAME} 
         hardware_pio
+        pico_rand
 		OT_rx_library
         OT_tx_library
         )
