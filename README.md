@@ -18,13 +18,19 @@ In normal operation the PIO code pushes a 32-bit word to the RX-FIFO for every f
 ## DevLog
 
 01/04/2025
-
 - create project on GitHub from my newly fixed [pico-pio-template](https://github.com/mjcross/pico-pio-template)
 - update readme.md *(this file)*
 
 02/04/2025
 - set project name and update filenames and CMakeLists
 
-07/05/2025
+07/04/2025
 - add PIO code to receive and decode a frame (compiles OK)
-- add `OT_tx_library` with PIO code to transmit a frame for loopback testing (compiles OK) 
+- add `OT_tx_library` with PIO code to transmit a frame for loopback testing (compiles OK)
+
+09/04/2025
+- test loopback code, fix error in `OT_rx_library`
+- link to 'pico/rand' to randomise frame content
+
+10/04/2025
+- define data type for frame bitfields
