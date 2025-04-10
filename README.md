@@ -1,19 +1,16 @@
 # Pico OpenTherm RX
 
-Robustly decode an OpenTherm frame on an RPi Pico (RP2040) using a PIO state machine.
+**OpenTherm** is a protocol for central heating boilers and controllers to communicate using 32-bit frames (see [OpenTherm 2.2 spec](OT-Protocol-Specification-v2-2.pdf)).
 
-The [OpenTherm 2.2 specification](OT-Protocol-Specification-v2-2.pdf) defines a point-to-point communications protocol between a central heating controller ('master') and boiler ('slave').
+This is a project for the RPi Pico (RP2040) to send and receive OpenTherm frames using PIO state machines: one to encode/transmit and the other to receive/decode. Both SMs are connected to the same GPIO (loopback test).
 
-The repository is structured as a VS Code project with CMake. It is configured to
-manage the target device via a [Picoprobe](https://github.com/raspberrypi/picoprobe) USB/SWD bridge.
+The repository is structured as a VS Code project with CMake. It is configured to manage the target device via a [Picoprobe](https://github.com/raspberrypi/picoprobe) USB/SWD bridge.
 
 ## Notes
 
-OpenTherm encodes bits at 1kb/s using Manchester / Bi-phase-L (rising edge '0', falling edge '1'). Frames consist of a leading '1', 32 data bits and a final '1'. The first data bit is an (even) parity bit.
+OpenTherm encodes bits with Manchester / Bi-phase-L (rising edge '0', falling edge '1'). Frames consist of a leading '1', 32 data bits and a final '1'. Frames are sent LSB first at 1kb/s with the first data bit being an (even) parity bit.
 
-As the interface controls a boiler it is important that bits are decoded robustly. The PIO code therefore enforces the bit-timing requirements of the specification. If the code detects a mis-timed transition then returns a dummy frame with bad parity.
-
-In normal operation the PIO code pushes a 32-bit word to the RX-FIFO for every frame received. If an invalid frame is detected then the calling program must discard and restart the conversation.
+The transmit and receive processes communicate with the CPU via the PIO state machine FIFO queues at one 32-bit word per frame.
 
 ## DevLog
 
@@ -34,3 +31,6 @@ In normal operation the PIO code pushes a 32-bit word to the RX-FIFO for every f
 
 10/04/2025
 - define data type for frame bitfields
+- display binary frame fields
+- add parity check
+- update documentation
