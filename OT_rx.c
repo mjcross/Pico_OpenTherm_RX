@@ -7,17 +7,27 @@
 const PIO pio = pio0;
 const uint opentherm_gpio = 15;   // GPIO to use for OpenTherm loopback
 
+
 typedef union {
     struct {
-        uint32_t data: 16;
-        uint32_t id: 8;
+        uint32_t data_value: 16;
+        uint32_t data_id: 8;
         uint32_t spare: 4;
-        uint32_t type: 3;
+        uint32_t msg_type: 3;
         uint32_t parity: 1;
     };
     uint32_t raw;
 } frame_t;  // bitfields in frame (OpenTherm Protocol Spec v2.2)
 
+
+uint32_t OT_frame_calc_parity (frame_t frame) {
+    int parity = 0;
+    while (frame.raw) {
+        frame.raw <<= 1;    // intentionally excludes first bit from calc
+        parity ^= frame.parity;
+    }
+    return parity;
+}
 
 int main() {
     stdio_init_all();
@@ -59,13 +69,15 @@ int main() {
         }
 
         // show raw frame and bitfields
-        printf ("= %032lb = %01b %03b %04b %08b %016b\n", 
+        printf ("= %032lb = parity %01b msg_type %03b spare %04b data_id %08b data_value %016b ", 
             rx_frame.raw, 
-            rx_frame.parity, 
-            rx_frame.type, 
+            rx_frame.parity,
+            rx_frame.msg_type, 
             rx_frame.spare, 
-            rx_frame.id,
-            rx_frame.data
+            rx_frame.data_id,
+            rx_frame.data_value
         );
+
+        puts (rx_frame.parity == OT_frame_calc_parity (rx_frame) ? "parity good": "parity bad");
     }
 }
