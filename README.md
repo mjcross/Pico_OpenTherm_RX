@@ -6,6 +6,8 @@ This is a project for the RPi Pico (RP2040) to send and receive OpenTherm frames
 
 The repository is structured as a VS Code project with CMake. It is configured to manage the target device via a [Picoprobe](https://github.com/raspberrypi/picoprobe) USB/SWD bridge.
 
+**NOTE: this code is less tested and less frequently updated than my [pico-opentherm-boiler](https://github.com/mjcross/pico-opentherm-boiler). You almost certainly want to be using that instead.**
+
 ## Notes
 
 OpenTherm encodes bits with Manchester / Bi-phase-L (rising edge '0', falling edge '1'). Frames consist of a leading '1', 32 data bits and a final '1'. Frames are sent LSB first at 1kb/s with the first data bit being an (even) parity bit.
