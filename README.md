@@ -37,3 +37,4 @@ The transmit and receive processes communicate with the CPU via the PIO state ma
 
 26/04/2025
 - back-port new receiver PIO code from [pico-opentherm-boiler](https://github.com/mjcross/pico-opentherm-boiler)
+- fix bit ordering in transmit code: OpenTherm frames are send MSB first

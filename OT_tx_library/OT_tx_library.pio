@@ -38,9 +38,9 @@ static inline void OT_tx_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
     float div = clock_get_hz (clk_sys) / 6e3;    // set 6khz clock = 6 ticks/bit at 1kb/s
     sm_config_set_clkdiv (&config, div);
 
-    // configure the output shift register for shift right with no autopull
+    // configure the output shift register for shift left, no autopull
     sm_config_set_out_shift (&config, 
-        true,  // bool shift_right
+        false,  // bool shift_right
         false, // bool autopush
         0      // uint push_threshold
     );
