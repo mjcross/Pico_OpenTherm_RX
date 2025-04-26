@@ -1,34 +1,48 @@
+/*
+RP2040 PIO state machine code to receive and decode an OpenTherm frame.
+Frames consist of 32 bits sent lsb first, that are Manchester-encoded and
+sent with an extra leading and traling '1'.
+The decoder resynchronises to each mid-bit transition and rejects a frame 
+if the time between mid-bit transitions falls outside the 900-1100us window 
+permitted by the specification. Valid frames are pushed to the CPU RX FIFO 
+as 32-bit words.
+*/
+
 .program OT_rx
+                            // === timings assume 4us per tick ====
+write_0:
+    in null, 1              // 0 -> ISR
 
-bit_is_1:
-    in x, 1             // shift single bit from 'X': 1 -> ISR
-    wait 0 pin 0        // sync to falling edge
+.wrap_target
+next_bit:
+    set y, 31 [18]          // wait until just before next mid-bit transition
+bit_delay:
+    jmp y-- bit_delay [5]   // nb: on exit y is all 1's
+    
+    set x, 24               // set up 200us timeout (25*2 ticks)
+    jmp pin wait_fall [9]   // get level 42us before earliest permitted transition
 
-.wrap_target            // arrive here after a zero bit
-    jmp y-- delay_850us
+wait_rise:                  // line was low, wait for 0->1 transition
+    jmp pin write_0         // rising edge: detect a '0'
+    jmp x-- wait_rise
+    jmp reset_frame         // timeout: invalid frame
 
-    wait 1 pin 0        // wait for STOP bit, always '1'
-    wait 0 pin 0
+wait_fall:                  // line was high, wait for 1->0 transition
+    jmp pin still_high
+    in y, 1                 // falling edge: detect a '1' (y is all 1's)
+    jmp next_bit
+still_high:
+    jmp x-- wait_fall
+                            // timeout: invalid frame
 
 PUBLIC entry:
-    set y, 31           // 32 data bits per frame
-
-    wait 1 pin 0        // wait for START bit, always '1'
-    wait 0 pin 0        // sync to mid-bit transition
-
-delay_850us:            // wait until just before next mid-bit transition
-    set x, 31 [5]       // 6 + 32*(32+1) = 1,062 ticks at 0.8us
-delay_loop:
-    nop [31]
-    jmp x-- delay_loop  // note that on exit X is all ones
-
-    jmp pin bit_is_1    // branch if gpio[EXECCTRL_JMP_PIN] is high
-
-bit_is_0:
-    in null, 1          // shift single bit from NULL: 0 -> ISR (autopush on 32nd bit)
-    wait 1 pin 0        // sync to rising edge on in_pin[0]
-
-.wrap                   // skip over bit_is_1
+reset_frame:
+    mov ISR, null           // reset ISR and input shift counter
+    wait 1 pin 0
+    wait 0 pin 0            // sync to mid-bit transition of start bit
+    
+                            // wrap to next_bit
+.wrap
 
 
 % c-sdk {
@@ -38,15 +52,15 @@ static inline void OT_rx_sm_init (PIO pio, uint sm, uint offset, uint gpio) {
 
     // configure the 'jmp' and 'in' pins
     sm_config_set_jmp_pin (&config, gpio);
-    sm_config_set_in_pins (&config, gpio);
+    sm_config_set_in_pins (&config, gpio);      // used for 'wait'
 
     // configure the clock divider
-    float div = clock_get_hz (clk_sys) / 1.25e6;    // set 1.25MHz clock = 0.8us per tick
+    float div = clock_get_hz (clk_sys) * 4e-6;  // set divider for 4us per tick
     sm_config_set_clkdiv (&config, div);
 
-    // configure ISR for shift right as LSB is sent first, and autopush on full
+    // configure ISR for shift left (MSB is sent first), autopush on full
     sm_config_set_in_shift (&config, 
-        true,  // bool shift_right
+        false,  // bool shift_right
         true,   // bool autopush
         32      // uint push_threshold
     );

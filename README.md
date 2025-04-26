@@ -34,3 +34,6 @@ The transmit and receive processes communicate with the CPU via the PIO state ma
 - display binary frame fields
 - add parity check
 - update documentation
+
+26/04/2025
+- back-port new receiver PIO code from [pico-opentherm-boiler](https://github.com/mjcross/pico-opentherm-boiler)
